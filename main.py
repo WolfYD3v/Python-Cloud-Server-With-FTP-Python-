@@ -1,10 +1,11 @@
 import ftputil
 import ftplib
+import json
 
 class FTP_Client():
     ftp_host = None
 
-    adress = "192.168.148.67"
+    adress = "192.168.1.12"
     user = "android"
     password = "android"
     port = 2221
@@ -14,6 +15,15 @@ class FTP_Client():
     host_current_dir_files = []
 
     mode = "Download"
+
+    def load_profile(self, profile_name: str) -> None:
+        with open(f"profiles/profile_{profile_name}.json", "r") as profile_file:
+            profile_data = json.loads(profile_file.read())
+            self.adress = profile_data["adress"]
+            self.user = profile_data["user"]
+            self.password = profile_data["password"]
+            self.port = profile_data["port"]
+            print(f"Profile '{profile_name}' Data: {profile_data}")
 
     def init_session_factory(self) -> None:
         self.session_factory = ftplib.FTP
@@ -47,9 +57,13 @@ class FTP_Client():
                 self.select_item()
     
     def upload_file(self) -> None:
-         self.stop("File Upload Succesfully!")
+        with self.ftp_host.open("index.html", "rb") as source:
+            with self.ftp_host.open("Documents/index.html", "wb") as target:
+                self.ftp_host.copyfileobj(source, target)
+        self.stop("File Upload Succesfully!")
     
     def start(self) -> None:
+        self.load_profile("mobile")
         self.init_session_factory()
         self.ftp_host = ftputil.FTPHost(
             self.adress,
