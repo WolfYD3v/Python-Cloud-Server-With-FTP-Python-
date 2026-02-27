@@ -10,5 +10,4 @@ wheels/
 .venv
 
 # Profiles
-profiles/profile_mobile.json
-profiles/profile_server.json
+profiles/
