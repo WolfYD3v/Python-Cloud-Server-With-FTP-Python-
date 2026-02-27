@@ -6,8 +6,8 @@ class FTP_Client():
     ftp_host = None
 
     adress = "192.168.1.12"
-    user = "android"
-    password = "android"
+    user = "anonymous"
+    password = "anonymous@"
     port = 2221
     session_factory = None
 
@@ -32,6 +32,7 @@ class FTP_Client():
     def list_items(self) -> bool:
         self.host_current_dir = self.ftp_host.curdir
         self.host_current_dir_files = self.ftp_host.listdir(self.host_current_dir)
+        self.host_current_dir_files.append("..")
         if len(self.host_current_dir_files) <= 0: return False
 
         idx = 1
@@ -42,7 +43,10 @@ class FTP_Client():
         return True
     
     def select_item(self, mode: str = "Download") -> None:
-        if not self.list_items(): self.stop("No Items Found!")
+        if not self.list_items():
+            self.ftp_host.chdir("..")
+            self.select_item()
+            #self.stop("No Items Found!")
 
         item_idx = int(input("Type the corresponding idx: "))
         if item_idx > 0 and item_idx <= len(self.host_current_dir_files):
@@ -56,14 +60,14 @@ class FTP_Client():
                 self.ftp_host.chdir(item_selected)
                 self.select_item()
     
-    def upload_file(self) -> None:
-        with self.ftp_host.open("index.html", "rb") as source:
-            with self.ftp_host.open("Documents/index.html", "wb") as target:
+    def upload_file(self, file_to_upload: str = "CAR_APP.fig") -> None:
+        with open(f"/home/wolfyd3v/Bureau/{file_to_upload}", "rb") as source:
+            with self.ftp_host.open(f"Documents/{file_to_upload}", "wb") as target:
                 self.ftp_host.copyfileobj(source, target)
-        self.stop("File Upload Succesfully!")
+        self.stop(f"File '{file_to_upload}' Upload Succesfully!")
     
     def start(self) -> None:
-        self.load_profile("mobile")
+        self.load_profile("mobile") # Profile Temporaire
         self.init_session_factory()
         self.ftp_host = ftputil.FTPHost(
             self.adress,
@@ -74,10 +78,8 @@ class FTP_Client():
 
 
         match self.mode:
-            case "Download":
-                self.select_item()
-            case "Upload":
-                self.upload_file()
+            case "Download": self.select_item()
+            case "Upload": self.upload_file()
             case _: self.stop(f"{self.mode} Mode Does Not Exist")
         
     
@@ -93,7 +95,7 @@ if __name__ == "__main__":
     ftp_client = FTP_Client()
 
     ftp_client.mode = "Download"
-    #ftp_client.mode = "Upload"
+    ftp_client.mode = "Upload"
     #ftp_client.mode = "RRR"
 
     ftp_client.start()
