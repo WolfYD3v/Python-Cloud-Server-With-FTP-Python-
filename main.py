@@ -63,12 +63,11 @@ class FTP_Client():
     
     def upload_file(self, file_to_upload: str = "CAR_APP.fig") -> None:
         with open(f"/home/wolfyd3v/Bureau/{file_to_upload}", "rb") as source:
-            with self.ftp_host.open(f"Documents/{file_to_upload}", "wb") as target:
+            with self.ftp_host.open(f"{self.ftp_host.curdir}/{file_to_upload}", "wb") as target:
                 self.ftp_host.copyfileobj(source, target)
         self.stop(f"File '{file_to_upload}' Upload Succesfully!")
     
     def start(self) -> None:
-        self.load_profile("mobile") # Profile Temporaire
         self.init_session_factory()
         self.ftp_host = ftputil.FTPHost(
             self.adress,
@@ -95,6 +94,7 @@ class FTP_Client():
 if __name__ == "__main__":
     ftp_client = FTP_Client()
 
+    print(sys.argv)
     if len(sys.argv) > 0: ftp_client.mode = sys.argv[1]
     if len(sys.argv) > 1: ftp_client.load_profile(sys.argv[2])
 
