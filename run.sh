@@ -5,7 +5,10 @@
 if [ -f .venv/bin/python ]; then
     echo "Lancement du script avec le Python de l'environnement virtuel..."
     # 2. Exécutez le script en appelant directement l'interpréteur du venv
-    .venv/bin/python main.py
+    read -p "Mode [Download | Upload]: " mode
+    read -p "Profile [mobile]: " profile
+    
+    .venv/bin/python main.py $mode $profile
 else
     echo "Erreur: L'environnement virtuel (.venv) est introuvable."
 fi

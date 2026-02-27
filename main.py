@@ -1,6 +1,7 @@
 import ftputil
 import ftplib
 import json
+import sys
 
 class FTP_Client():
     ftp_host = None
@@ -94,8 +95,7 @@ class FTP_Client():
 if __name__ == "__main__":
     ftp_client = FTP_Client()
 
-    ftp_client.mode = "Download"
-    ftp_client.mode = "Upload"
-    #ftp_client.mode = "RRR"
+    if len(sys.argv) > 0: ftp_client.mode = sys.argv[1]
+    if len(sys.argv) > 1: ftp_client.load_profile(sys.argv[2])
 
     ftp_client.start()
