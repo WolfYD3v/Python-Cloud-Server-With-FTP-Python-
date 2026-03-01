@@ -47,7 +47,7 @@ class FTP_Client():
     def download_file(self) -> None:
         if not self.list_items():
             self.ftp_host.chdir("..")
-            self.select_item()
+            self.download_file()
             #self.stop("No Items Found!")
 
         item_idx = int(input("Type the corresponding idx: "))
