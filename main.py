@@ -2,6 +2,7 @@ import ftputil
 import ftplib
 import json
 import sys
+import os
 
 class FTP_Client():
     ftp_host = None
@@ -43,7 +44,7 @@ class FTP_Client():
         
         return True
     
-    def select_item(self, mode: str = "Download") -> None:
+    def download_file(self) -> None:
         if not self.list_items():
             self.ftp_host.chdir("..")
             self.select_item()
@@ -56,16 +57,28 @@ class FTP_Client():
 
             if self.ftp_host.path.isfile(item_selected):
                 self.ftp_host.download(item_selected, f"/home/wolfyd3v/Documents/{item_selected}")
-                self.stop(f"File '{item_selected}' Downloaded Succesfully!")
+                print(f"File '{item_selected}' Downloaded Succesfully!")
+
+                if self.check_for_stoping_processus(): self.stop()
+                else: self.download_file()
             else:
                 self.ftp_host.chdir(item_selected)
-                self.select_item()
+                self.download_file()
     
-    def upload_file(self, file_to_upload: str = "CAR_APP.fig") -> None:
-        with open(f"/home/wolfyd3v/Bureau/{file_to_upload}", "rb") as source:
-            with self.ftp_host.open(f"{self.ftp_host.curdir}/{file_to_upload}", "wb") as target:
+    def upload_file(self) -> None:
+        file_to_upload_path = input("Drag and drop a file/type file path here: ").strip()
+        file_to_upload_path = file_to_upload_path.replace('"', '').replace("'", "")
+        if not os.path.exists(file_to_upload_path): self.stop(f"File Not Found At Location '{file_to_upload_path}'")
+
+        file = os.path.basename(file_to_upload_path)
+
+        with open(file_to_upload_path, "rb") as source:
+            with self.ftp_host.open(f"{self.ftp_host.curdir}/{file}", "wb") as target:
                 self.ftp_host.copyfileobj(source, target)
-        self.stop(f"File '{file_to_upload}' Upload Succesfully!")
+        print(f"File '{file}' Upload Succesfully!")
+
+        if self.check_for_stoping_processus(): self.stop()
+        else: self.upload_file()
     
     def start(self) -> None:
         self.init_session_factory()
@@ -78,12 +91,15 @@ class FTP_Client():
 
 
         match self.mode:
-            case "Download": self.select_item()
+            case "Download": self.download_file()
             case "Upload": self.upload_file()
             case _: self.stop(f"{self.mode} Mode Does Not Exist")
         
+    def check_for_stoping_processus(self) -> bool:
+        stop_process = input("Stop Process? (type something to stop the process) ")
+        return stop_process != ""
     
-    def stop(self, reason: str = "FTP Server Closed") -> None:
+    def stop(self, reason: str = "Processus Stoped") -> None:
         if not self.ftp_host: return
 
         print(reason)
