@@ -18,7 +18,7 @@ class FTP_Client():
     host_current_dir_files = []
 
     mode = "Download"
-    local = "/home/wolfyd3v/Documents/"
+    local_download_dir_path = "/home/wolfyd3v/Documents/"
 
     def load_profile(self, profile_name: str) -> None:
         with open(f"profiles/profile_{profile_name}.json", "r") as profile_file:
@@ -38,11 +38,11 @@ class FTP_Client():
         return file_count
 
     def list_items(self) -> None:
-        self.host_current_dir = self.ftp_host.curdir
+        self.host_current_dir = self.ftp_host.getcwd()
         self.host_current_dir_files = self.ftp_host.listdir(self.host_current_dir)
         self.host_current_dir_files.append("..")
 
-        print(f"Current location: {self.ftp_host.getcwd()}")
+        print(f"Current location: {self.host_current_dir}")
         idx = 1
         for elem in self.host_current_dir_files:
             console_output = f"| {idx} | {elem} "
@@ -52,43 +52,31 @@ class FTP_Client():
             idx += 1
     
     def download_file(self, file: str) -> None:
-        local_path = f"{self.local}{file}"
+        local_path = f"{self.local_download_dir_path}{file}"
         local_path = local_path.replace('"', '').replace("'", "")
         self.ftp_host.download(file, local_path)
         print(f"File '{file}' Downloaded Succesfully!")
     
-    '''
     def download_folder(self, folder: str) -> None:
-        print(folder)
-        if not os.path.exists(f"{self.local}/{folder}"): os.mkdir(f"{self.local}/{folder}")
+        if not os.path.exists(self.local_download_dir_path + folder): os.mkdir(self.local_download_dir_path + folder)
 
-        for file in self.ftp_host.listdir(folder):
-            if self.ftp_host.path.isfile(file): self.download_file(f"{folder}/{file}")
-            else:
-                if not os.path.exists(f"{self.local}/{folder}/{file}"): 
-                    self.download_folder(f"{folder}/{file}")
-                    #os.mkdir(f"{self.local}/{folder}/{file}")
-    '''
-    
-    def download_folder(self, folder: str) -> None:
-        # Walk through the remote directory tree
         for root, dirs, files in self.ftp_host.walk(folder):
-            # Calculate the relative path to recreate the structure locally
+            # Calcul du chemin relatif
             rel_path = os.path.relpath(root, folder)
-            local_root = os.path.join(folder, rel_path)
+            local_root = os.path.join(self.local_download_dir_path + folder, rel_path)
+            print(local_root)
 
-            # Ensure the local directory exists
-            if not os.path.exists(local_root):
-                os.makedirs(local_root)
+            # Créer le dossier local
+            os.makedirs(local_root, exist_ok=True)
 
+            # Télécharger les fichiers
             for file in files:
-                remote_path = self.ftp_host.path.join(root, file)
-                local_path = os.path.join(local_root, file)
-                print(local_path)
-                    
-                # download_if_newer handles binary/text mode automatically
-                self.ftp_host.download_if_newer(remote_path, self.local + local_path)
-                print(f"Synced: {file}")
+                remote_file = self.ftp_host.path.join(root, file)
+                local_file = os.path.join(local_root, file)
+
+                self.ftp_host.download(remote_file, local_file)
+                print(f"File '{file}' Downloaded Succesfully!")
+                time.sleep(0.1)
     
     
     def explore_files(self) -> None:
@@ -143,7 +131,7 @@ class FTP_Client():
         with open(file_path, "rb") as source:
             with self.ftp_host.open(f"{self.ftp_host.curdir}/{file}", "wb") as target:
                 self.ftp_host.copyfileobj(source, target)
-        print(f"File '{file}' Upload Succesfully!")
+        print(f"File '{file}' Uploaded Succesfully!")
     
     def upload_folder(self, file_to_upload_path: str) -> None:
         print(f"Uploading folder: {file_to_upload_path}")
@@ -184,7 +172,7 @@ class FTP_Client():
 
         print(reason)
         self.ftp_host.close()
-        quit()
+        sys.exit(0)
 
 
 if __name__ == "__main__":
