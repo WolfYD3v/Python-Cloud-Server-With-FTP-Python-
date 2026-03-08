@@ -218,9 +218,29 @@ class FTP_Client():
 
 
 
+def load_profiles() -> str:
+    profiles_location_path = os.path.join(os.path.dirname(__file__), "profiles")
+    profiles = os.listdir(profiles_location_path)
+    profiles.remove("profile_template.json")
+
+    _profiles_list_str = "|[ "
+    for profile in profiles:
+        profile = profile.replace("profile_", "")
+        profile = profile.replace(".json", "")
+        _profiles_list_str += profile + " "
+    _profiles_list_str += "]|"
+
+    default_profile = profiles[0]
+    default_profile = default_profile.replace("profile_", "")
+    default_profile = default_profile.replace(".json", "")
+
+    return _profiles_list_str, default_profile
+
 if __name__ == "__main__":
-    profile = input("Profile [server | mobile] (default: server): ")
-    if profile == "": profile = "server"
+    profiles_list_str, default_profile = load_profiles()
+
+    profile = input(f"Profile {profiles_list_str} (default: {default_profile}): ")
+    if profile == "": profile = default_profile
 
     ftp_client = FTP_Client()
     ftp_client.load_profile(profile)

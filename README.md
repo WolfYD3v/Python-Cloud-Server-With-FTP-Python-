@@ -1,22 +1,27 @@
 # Python FTP Client
 
-## The Project: Why did I created this beauty?
-A long time ago I've got the idea to have my own Local Cloud Server, to not depend on Google Drive (I don't really trust them since the rise of AI) \
-At first I wanted to buy a NAS, but 300 euros is too much for a broke solo dev.
+## The Project: What the heck is this!?
+This FTP Client, made in Python, allow my computer to connect to FTP Servers. \
+Once connected, I can: 
+- Explore the files/directories stored on the Server
+- Download files/directories from the Server, to my computer
+- Upload files/directories on the Server if it allows it
+- And even delete files/directories if the server allows it too
 
-So I've asked myself: "Why not use my old own laptop that runs AntiX because this is the perfect Linux distribution for a 2Gb RAM garbage to create my own Cloud Server with FTP?" \
-Yes... That's a great idea!
+Fully fonctionnal in the terminal, I can do all of my tool's capacities by typing numbers. \
+Resulting into actual actions.
 
-A great idea that need a client side tool to connect to my amazing server with 60 Gb of storage. \
-This tool is My OWN FTP Client made in Python of course :)
+To help me connecting to the FTP Server I want, the profiles are here to load the right adress with the port, and the credentials required. \
+They are auto listed, and if I want to create a new profile I have a template ready to make this process easy.
 
-## How to use this Client?
-1. Get a local copy the the repository
-2. Install on your system [UV](https://github.com/astral-sh/uv)
-3. Open a terminal app, inside the folder of the local copy ![STEP_1_IMG](README_IMGS/use_step_1.png)
-4. Install the package ```ftputil``` with ```uv add ftputil```
-5. Configure your own profiles, very important!
-6. Type ```./run.sh``` and fil the prompts given ![STEP_2_IMG](README_IMGS/use_step_2.png)
-7. Enjoy!
+## For what use did I created dis:
+I can now easyly transfer files from my computer, to my phone, and vice-versa. I don't need to use Google Drive anymore. \
+Also I can now use my old crappy laptop as a Local Cloud Server that use the FTP protocol, and like with my phone transfer files with no issues.
 
-Go to the folder of the project on your terminal, then type "./run.sh"
+This tool is very useful !
+
+## The Client in action:
+<video width="auto" height="auto" loop controls>
+  <source src="README_Assets/python_ftp_client_working_rec.mp4" type="video/mp4">
+</video>
+
