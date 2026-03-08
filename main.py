@@ -176,10 +176,15 @@ class FTP_Client():
 
 
 if __name__ == "__main__":
+    mode = input("Mode [Download | Upload] (default: Download): ")
+    if mode == "": mode = "Download"
+
+    profile = input("Profile [server | mobile] (default: server): ")
+    if profile == "": profile = "server"
+
     ftp_client = FTP_Client()
 
-    print(sys.argv)
-    if len(sys.argv) > 0: ftp_client.mode = sys.argv[1]
-    if len(sys.argv) > 1: ftp_client.load_profile(sys.argv[2])
+    ftp_client.mode = mode
+    ftp_client.load_profile(profile)
 
     ftp_client.start()
