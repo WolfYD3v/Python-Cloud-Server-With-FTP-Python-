@@ -17,7 +17,9 @@ class FTP_Client():
     host_current_dir = ""
     host_current_dir_files = []
 
-    mode = "Download"
+    actions = ["mkdir", "upload", "delete", "end"]
+    delete_action_idx = -1
+
     local_download_dir_path = "/home/wolfyd3v/Documents/"
 
     def load_profile(self, profile_name: str) -> None:
@@ -42,13 +44,21 @@ class FTP_Client():
         self.host_current_dir_files = self.ftp_host.listdir(self.host_current_dir)
         self.host_current_dir_files.append("..")
 
+
         print(f"Current location: {self.host_current_dir}")
         idx = 1
         for elem in self.host_current_dir_files:
             console_output = f"| {idx} | {elem} "
-            if not self.ftp_host.path.isfile(elem): console_output += f"[{self.count_files_at(elem)} element(s)]"
+            if not self.ftp_host.path.isfile(elem) and not elem in self.actions: console_output += f"[{self.count_files_at(elem)} element(s)]"
 
             print(console_output)
+            idx += 1
+        
+        print("")
+        print("--ACTIONS--")
+        for action in self.actions:
+            self.host_current_dir_files.append(action)
+            print(f"| {idx} | {action} ")
             idx += 1
     
     def download_file(self, file: str) -> None:
@@ -57,6 +67,11 @@ class FTP_Client():
         self.ftp_host.download(file, local_path)
         print(f"File '{file}' Downloaded Succesfully!")
     
+    def delete_file(self, file: str) -> None:
+        self.ftp_host.remove(file)
+        print(f"File '{file}' Deleted!")
+        time.sleep(0.1)
+    
     def download_folder(self, folder: str) -> None:
         if not os.path.exists(self.local_download_dir_path + folder): os.mkdir(self.local_download_dir_path + folder)
 
@@ -64,7 +79,6 @@ class FTP_Client():
             # Calcul du chemin relatif
             rel_path = os.path.relpath(root, folder)
             local_root = os.path.join(self.local_download_dir_path + folder, rel_path)
-            print(local_root)
 
             # Créer le dossier local
             os.makedirs(local_root, exist_ok=True)
@@ -78,15 +92,37 @@ class FTP_Client():
                 print(f"File '{file}' Downloaded Succesfully!")
                 time.sleep(0.1)
     
+    def delete_folder(self, folder: str) -> None:
+        self.ftp_host.rmtree(folder)
+    
+    def delete(self) -> None:
+        print("--FILE DELETION--")
+        element_to_delete_idx = int(input(f"Type the corresponding idx of the element to delete [from 1 to {len(self.host_current_dir_files) - 4}]: "))
+        if element_to_delete_idx > 0 and element_to_delete_idx <= len(self.host_current_dir_files):
+            element_to_delete = self.host_current_dir_files[element_to_delete_idx - 1]
+
+            if self.ftp_host.path.isfile(element_to_delete): self.delete_file(element_to_delete)
+            else: self.delete_folder(element_to_delete)
+        
+        else: self.explore_files()
+    
     
     def explore_files(self) -> None:
+        print("")
         self.list_items()
 
         item_idx = int(input("Type the corresponding idx: "))
         print("")
+
         if item_idx > 0 and item_idx <= len(self.host_current_dir_files):
-            item_idx -= 1
-            item_selected = self.host_current_dir_files[item_idx]
+            item_selected = self.host_current_dir_files[item_idx - 1]
+
+            match item_selected:
+                case "delete":
+                    self.delete()
+                    self.explore_files()
+                case "upload": self.upload()
+                case "end": self.stop()
 
             if self.ftp_host.path.isfile(item_selected): self.manage_file(item_selected)
             else: self.manage_folder(item_selected)
@@ -100,6 +136,13 @@ class FTP_Client():
     
     def manage_folder(self, folder: str) -> None:
         folder_action = ""
+
+        if folder == "mkdir":
+            new_folder_name = input("New Folder Name: ")
+            self.create_folder(new_folder_name)
+            self.ftp_host.chdir(new_folder_name)
+            self.explore_files()
+        
         if folder != "..":
             folder_action = input(f"Download Folder [type 1] | Explore Files In '{folder}' [type somathing else] ")
             print("")
@@ -108,9 +151,13 @@ class FTP_Client():
             self.explore_files()
         else:
             self.download_folder(folder)
-                
+            
             if self.check_for_stoping_processus(): self.stop()
             else: self.explore_files()
+    
+    def create_folder(self, folder_name: str) -> None:
+        print("--FOLDER CREATION--")
+        if not self.ftp_host.path.exists(folder_name): self.ftp_host.mkdir(folder_name)
 
 
 
@@ -121,8 +168,7 @@ class FTP_Client():
         if os.path.isfile(file_to_upload_path): self.upload_file(file_to_upload_path)
         else: self.upload_folder(file_to_upload_path)
 
-        if self.check_for_stoping_processus(): self.stop()
-        else: self.upload()
+        self.explore_files()
 
     
     def upload_file(self, file_path: str) -> None:
@@ -136,7 +182,7 @@ class FTP_Client():
     def upload_folder(self, file_to_upload_path: str) -> None:
         print(f"Uploading folder: {file_to_upload_path}")
         folder_name = os.path.basename(file_to_upload_path)
-        if not self.ftp_host.path.exists(folder_name): self.ftp_host.mkdir(folder_name)
+        self.create_folder(folder_name)
         self.ftp_host.chdir(folder_name)
 
         for file in os.listdir(file_to_upload_path):
@@ -157,11 +203,7 @@ class FTP_Client():
             session_factory = self.session_factory
         )
 
-
-        match self.mode:
-            case "Download": self.explore_files()
-            case "Upload": self.upload()
-            case _: self.stop(f"{self.mode} Mode Does Not Exist")
+        self.explore_files()
         
     def check_for_stoping_processus(self) -> bool:
         stop_process = input("Stop Process? (type something to stop the process) ")
@@ -175,16 +217,12 @@ class FTP_Client():
         sys.exit(0)
 
 
-if __name__ == "__main__":
-    mode = input("Mode [Download | Upload] (default: Download): ")
-    if mode == "": mode = "Download"
 
+if __name__ == "__main__":
     profile = input("Profile [server | mobile] (default: server): ")
     if profile == "": profile = "server"
 
     ftp_client = FTP_Client()
-
-    ftp_client.mode = mode
     ftp_client.load_profile(profile)
 
     ftp_client.start()
